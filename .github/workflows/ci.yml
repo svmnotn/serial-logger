@@ -17,8 +17,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Checkout sources
-        uses: actions/checkout@v1
+      - uses: actions/checkout@v3
 
       - name: Install libusb
         run: sudo apt install -y libusb-1.0-0-dev libudev-dev
@@ -40,17 +39,14 @@ jobs:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout sources
-        uses: actions/checkout@v1
+      - uses: actions/checkout@v3
 
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+          components: rustfmt
           override: true
-
-      - name: Install rustfmt
-        run: rustup component add rustfmt
 
       - name: Run cargo fmt
         uses: actions-rs/cargo@v1
@@ -62,23 +58,13 @@ jobs:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout sources
-        uses: actions/checkout@v1
-
-      - name: Install libusb
-        run: sudo apt install -y libusb-1.0-0-dev libudev-dev
-
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
-          override: true
-
-      - name: Install clippy
-        run: rustup component add clippy
-
-      - name: Run cargo clippy
-        uses: actions-rs/clippy-check@v1
+            toolchain: nightly
+            components: clippy
+            override: true
+      - uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: --all-features
