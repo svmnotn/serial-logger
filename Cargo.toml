@@ -2,8 +2,13 @@
 name = "serial-logger"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+authors = ["Victor M. Suarez <svmnotn@gmail.com>"]
+rust-version = "1.69"
+license = "MIT"
+repository = "https://github.com/svmnotn/serial-logger/"
+readme = "README.md"
+description = "Logs a serial port to stdout or a file."
+maintenance = { status = "passively-maintained" }
 
 [dependencies]
 serialport = "4.2.0"
