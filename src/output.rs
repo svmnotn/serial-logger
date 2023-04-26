@@ -1,5 +1,8 @@
-use std::{io::{Write, stdout}, fs::File};
 use crate::{args::Args, error::Result};
+use std::{
+    fs::File,
+    io::{stdout, Write},
+};
 
 /// A wrapper around stdout OR a File, allowing us to write to either
 /// based on if the `log_file` field of [Args] is filled

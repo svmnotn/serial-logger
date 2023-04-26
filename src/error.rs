@@ -1,8 +1,8 @@
+use lexopt::Error as ArgsError;
 use serialport::Error as SerialError;
 use std::{io::Error as IoError, result::Result as StdResult};
 use time::error::Format as FormattingError;
 use time::error::IndeterminateOffset as OffsetError;
-use lexopt::Error as ArgsError;
 
 pub type Result<T> = StdResult<T, Error>;
 
