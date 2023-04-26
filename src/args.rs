@@ -1,6 +1,6 @@
 use crate::{error::{Result, Error::MissingPortArgument}, serial::available_ports};
 
-const USAGE_STRING: &'static str = r#"Usage: serial-logger [--print] [-h|--help] [-b|--baud=NUM] [-t|--timeout=NUM] [-s|--buffer-size=NUM] [-l|--log=LOG_FILE_NAME] [--port=SERIAL_PORT_NAME] SERIAL_PORT_NAME
+const USAGE_STRING: &str = r#"Usage: serial-logger [--print] [-h|--help] [-b|--baud=NUM] [-t|--timeout=NUM] [-s|--buffer-size=NUM] [-l|--log=LOG_FILE_NAME] [--port=SERIAL_PORT_NAME] SERIAL_PORT_NAME
 
 --help: Prints this message
 --print: Prints out all available serial ports
