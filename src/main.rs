@@ -29,16 +29,35 @@ fn main() -> Result<()> {
 
     let mut serial_buf: Vec<u8> = vec![0; args.buffer_size];
     let mut out = Output::from_args(&args)?;
+    let mut read_byte_count = 0;
     loop {
-        match port.read(serial_buf.as_mut_slice()) {
-            Ok(read_byte_count) => {
-                out.write_all(get_timestamp()?.as_bytes())?;
-                out.write_all(": ".as_bytes())?;
-                out.write_all(&serial_buf[..read_byte_count])?;
+        read_byte_count = match port.read(&mut serial_buf[read_byte_count..]) {
+            Err(e) if e.kind() == std::io::ErrorKind::Interrupted => Ok(0),
+            v => v,
+        }? + read_byte_count;
+
+        let total_bytes = &mut serial_buf[..read_byte_count];
+        for v in total_bytes.iter_mut() {
+            if *v == b'\r' {
+                *v = b' ';
             }
-            Err(e) if e.kind() == std::io::ErrorKind::Interrupted => (),
-            Err(e) if e.kind() == std::io::ErrorKind::TimedOut => eprintln!("Timed Out!"),
-            Err(e) => eprintln!("{:?}", e),
+        }
+
+        let mut last_new_line = 0;
+        for (i, _) in total_bytes
+            .iter()
+            .enumerate()
+            .filter(|(_, byte)| **byte == b'\n')
+        {
+            out.write_all(get_timestamp()?.as_bytes())?;
+            out.write_all(b": ")?;
+            out.write_all(&total_bytes[last_new_line..(i + 1)])?;
+            last_new_line = i + 1;
+        }
+
+        if last_new_line > 0 && read_byte_count > 0 {
+            serial_buf.copy_within(last_new_line..read_byte_count, 0);
+            read_byte_count = (last_new_line..read_byte_count).len();
         }
     }
 }
