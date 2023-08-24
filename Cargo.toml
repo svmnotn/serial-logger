@@ -11,7 +11,7 @@ description = "Logs a serial port to stdout or a file."
 maintenance = { status = "passively-maintained" }
 
 [dependencies]
-serialport = "4.2.1"
+serialport = "4.2.2"
 time = { version = "0.3.20", features = ["local-offset", "formatting", "macros"] }
 lexopt = "0.3.0"
 
