@@ -8,7 +8,6 @@ license = "MIT"
 repository = "https://github.com/svmnotn/serial-logger/"
 readme = "README.md"
 description = "Logs a serial port to stdout or a file."
-maintenance = { status = "passively-maintained" }
 
 [dependencies]
 serialport = "4.2.2"
