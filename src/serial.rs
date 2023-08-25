@@ -6,30 +6,23 @@ pub type PortAddress = String;
 
 /// Get an iterator over the available USB ports that have a serial number
 pub fn available_ports() -> Result<impl Iterator<Item = (PortName, PortAddress)>> {
-    use serialport::{SerialPortInfo, SerialPortType};
+    use serialport::{SerialPortInfo, SerialPortType, UsbPortInfo};
 
-    Ok(serialport::available_ports()?
-        .into_iter()
-        .filter(
-            |SerialPortInfo {
-                 port_name: _,
-                 port_type: ty,
-             }| matches!(ty, SerialPortType::UsbPort(p) if p.serial_number.is_some()),
-        )
-        .map(
-            |SerialPortInfo {
-                 port_name,
-                 port_type,
-             }| {
-                (
-                    match port_type {
-                        SerialPortType::UsbPort(port) => port.serial_number.unwrap(),
-                        _ => unreachable!(),
-                    },
-                    port_name,
-                )
-            },
-        ))
+    Ok(serialport::available_ports()?.into_iter().filter_map(
+        |SerialPortInfo {
+             port_name: name,
+             port_type: ty,
+         }| match ty {
+            SerialPortType::UsbPort(UsbPortInfo {
+                vid: _,
+                pid: _,
+                serial_number: Some(serial),
+                manufacturer: _,
+                product: _,
+            }) => Some((serial, name)),
+            _ => None,
+        },
+    ))
 }
 
 /// Attempt to open the port at the specified path, with the given baud_rate and timeout
@@ -38,7 +31,7 @@ pub fn open_port(path: &str, baud_rate: u32, timeout_in_seconds: u64) -> Result<
     use std::time::Duration;
 
     serialport::new(path, baud_rate)
-        .flow_control(FlowControl::None)
+        .flow_control(FlowControl::Software)
         .data_bits(DataBits::Eight)
         .parity(Parity::None)
         .stop_bits(StopBits::One)

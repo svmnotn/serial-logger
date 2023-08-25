@@ -1,13 +1,13 @@
 [package]
 name = "serial-logger"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["Victor M. Suarez <svmnotn@gmail.com>"]
 rust-version = "1.69"
 license = "MIT"
 repository = "https://github.com/svmnotn/serial-logger/"
 readme = "README.md"
-description = "Logs a serial port to stdout or a file."
+description = "Logs a serial port to stdout or a file. Allows for writing to the serial port from stdin"
 
 [dependencies]
 serialport = "4.2.2"

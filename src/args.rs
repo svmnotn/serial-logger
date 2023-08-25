@@ -35,7 +35,7 @@ pub fn parse_args() -> Result<Args> {
 
     let mut port = None;
     let mut baud_rate = 115_200;
-    let mut timeout_in_seconds = 120;
+    let mut timeout_in_seconds = 1;
     let mut buffer_size = 100000;
     let mut log_file = None;
     let mut parser = lexopt::Parser::from_env();
