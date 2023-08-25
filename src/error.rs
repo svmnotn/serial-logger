@@ -20,6 +20,14 @@ pub enum Error {
     PortNotFound,
     /// The stdin thread disconnected unexpectedly
     StdInThreadDisconnected,
+    /// --flow-control was not one of [n, s, h]
+    InvalidFlowControlArgument,
+    /// --data-bits was not one of [8, 7, 6, 5]
+    InvalidDataBitsArgument,
+    /// --parity was not one of [n, e, o]
+    InvalidParityArgument,
+    /// --stop-bits was not one of [1, 2]
+    InvalidStopBitsArgument,
 }
 
 impl From<IoError> for Error {

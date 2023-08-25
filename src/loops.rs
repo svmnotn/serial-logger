@@ -6,9 +6,10 @@ use crate::{
 };
 use serialport::SerialPort;
 use std::{
+    ffi::CString,
     io::{stdin, BufRead},
     sync::mpsc::{Receiver, Sender, TryRecvError},
-    thread::spawn, ffi::CString,
+    thread::spawn,
 };
 
 pub struct ReadLoop {
@@ -21,7 +22,7 @@ impl ReadLoop {
     pub fn from_args(args: &Args) -> Result<Self> {
         Ok(Self {
             buffer: vec![0; args.buffer_size],
-            output: Output::from_args(&args)?,
+            output: Output::from_args(args)?,
             read_bytes: 0,
         })
     }
@@ -30,7 +31,14 @@ impl ReadLoop {
         use std::io::Write;
 
         self.read_bytes = match port.read(&mut self.buffer[self.read_bytes..]) {
-            Err(e) if e.kind() == std::io::ErrorKind::Interrupted || e.kind() == std::io::ErrorKind::TimedOut => Ok(0),
+            Err(e)
+                if matches!(
+                    e.kind(),
+                    std::io::ErrorKind::Interrupted | std::io::ErrorKind::TimedOut
+                ) =>
+            {
+                Ok(0)
+            }
             v => v,
         }? + self.read_bytes;
 
@@ -66,10 +74,11 @@ impl ReadLoop {
 pub struct WriteLoop {
     kill_thread: Sender<()>,
     rx_input: Receiver<CString>,
+    windows_ending: bool,
 }
 
 impl WriteLoop {
-    pub fn new() -> Self {
+    pub fn from_args(args: &Args) -> Self {
         let (tx_user_input, rx_input) = std::sync::mpsc::channel();
         let (kill_thread, kill_command) = std::sync::mpsc::channel();
 
@@ -82,8 +91,7 @@ impl WriteLoop {
                 }
 
                 if user_input.read_line(&mut buf)? > 0 {
-                    buf.pop();
-                    tx_user_input.send(CString::new(buf.as_bytes()).unwrap())?;
+                    tx_user_input.send(CString::new(buf.trim_end().as_bytes()).unwrap())?;
                     buf.clear();
                 }
             }
@@ -92,19 +100,26 @@ impl WriteLoop {
         WriteLoop {
             kill_thread,
             rx_input,
+            windows_ending: args.windows_line_ending
         }
     }
 
     pub fn run(&self, port: &mut impl SerialPort) -> Result<()> {
-        Ok(match self.rx_input.try_recv() {
-            Ok(input) => {
-                port.write(input.as_bytes())?;
-                port.write(&[b'\r'])?;
-                port.write(&[b'\n'])?;
-            },
-            Err(TryRecvError::Disconnected) => return Err(StdInThreadDisconnected),
-            _ => (),
-        })
+        let input = self.rx_input.try_recv();
+
+        if let Err(TryRecvError::Disconnected) = input {
+            return Err(StdInThreadDisconnected);
+        }
+
+        if let Ok(input) = input {
+            port.write_all(input.as_bytes())?;
+            if self.windows_ending {
+                port.write_all(&[b'\r'])?;
+            }
+            port.write_all(&[b'\n'])?;
+        }
+
+        Ok(())
     }
 }
 

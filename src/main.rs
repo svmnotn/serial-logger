@@ -38,7 +38,7 @@ fn main() -> Result<()> {
     );
 
     let mut read_loop = ReadLoop::from_args(&args)?;
-    let write_loop = WriteLoop::new();
+    let write_loop = WriteLoop::from_args(&args);
 
     port.write_data_terminal_ready(true)?;
     port.write_request_to_send(true)?;
