@@ -4,10 +4,7 @@ mod args;
 use args::{parse_args, Args};
 
 mod error;
-use error::{
-    Error::PortNotFound,
-    Result,
-};
+use error::{Error::PortNotFound, Result};
 
 mod loops;
 use loops::ReadLoop;

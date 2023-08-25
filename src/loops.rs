@@ -100,7 +100,7 @@ impl WriteLoop {
         WriteLoop {
             kill_thread,
             rx_input,
-            windows_ending: args.windows_line_ending
+            windows_ending: args.windows_line_ending,
         }
     }
 

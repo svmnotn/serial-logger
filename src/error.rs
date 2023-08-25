@@ -1,6 +1,6 @@
 use lexopt::Error as ArgsError;
 use serialport::Error as SerialError;
-use std::{ffi::CString, sync::mpsc::SendError, io::Error as IoError, result::Result as StdResult};
+use std::{ffi::CString, io::Error as IoError, result::Result as StdResult, sync::mpsc::SendError};
 use time::error::{Format as FormattingError, IndeterminateOffset as OffsetError};
 
 pub type Result<T> = StdResult<T, Error>;
