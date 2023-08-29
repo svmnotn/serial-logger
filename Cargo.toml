@@ -11,7 +11,7 @@ description = "Logs a serial port to stdout or a file. Allows for writing to the
 
 [dependencies]
 serialport = "4.2.2"
-time = { version = "0.3.27", features = ["local-offset", "formatting", "macros"] }
+time = { version = "0.3.28", features = ["local-offset", "formatting", "macros"] }
 lexopt = "0.3.0"
 
 # The profile that 'cargo dist' will build with
@@ -24,7 +24,7 @@ lto = "thin"
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.0.5"
 # The preferred Rust toolchain to use in CI (rustup toolchain syntax)
-rust-toolchain-version = "1.67.1"
+rust-toolchain-version = "1.70.0"
 # The installers to generate for each app
 installers = ["shell", "powershell"]
 # Target platforms to build apps for (Rust target-triple syntax)
