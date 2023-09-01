@@ -117,7 +117,7 @@ jobs:
       - name: Install libusb
         run: sudo apt install -y libusb-1.0-0-dev libudev-dev
         # Only install on Ubuntu
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-20.04'
       - name: Install cargo-dist
         run: ${{ matrix.install-dist }}
       - name: Run cargo-dist
