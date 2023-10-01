@@ -25,6 +25,15 @@ pub fn available_ports() -> Result<impl Iterator<Item = (PortName, PortAddress)>
     ))
 }
 
+/// Prints all the available ports with the format: `SERIAL @ PATH`
+pub fn print_avaliable_ports() -> Result<()> {
+    for (name, path) in available_ports()? {
+        println!("{name} @ {path}");
+    }
+
+    Ok(())
+}
+
 /// Attempt to open the port at the specified path, with the given baud_rate and timeout
 pub fn open_port(path: &str, baud_rate: u32, timeout_in_seconds: u64) -> Result<impl SerialPort> {
     use serialport::{DataBits, FlowControl, Parity, StopBits};

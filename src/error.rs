@@ -1,7 +1,6 @@
 use lexopt::Error as ArgsError;
 use serialport::Error as SerialError;
 use std::{ffi::CString, io::Error as IoError, result::Result as StdResult, sync::mpsc::SendError};
-use time::error::{Format as FormattingError, IndeterminateOffset as OffsetError};
 
 pub type Result<T> = StdResult<T, Error>;
 
@@ -10,12 +9,8 @@ pub type Result<T> = StdResult<T, Error>;
 pub enum Error {
     Io(IoError),
     Serial(SerialError),
-    IndeterminateTimeZone(OffsetError),
-    TimeStampFormatting(FormattingError),
     UnableToParseArguments(ArgsError),
     SendError(SendError<CString>),
-    /// No serial port given from the command line
-    MissingPortArgument,
     /// The specified command line serial port was not found
     PortNotFound,
     /// The stdin thread disconnected unexpectedly
@@ -39,18 +34,6 @@ impl From<IoError> for Error {
 impl From<SerialError> for Error {
     fn from(value: SerialError) -> Self {
         Self::Serial(value)
-    }
-}
-
-impl From<OffsetError> for Error {
-    fn from(value: OffsetError) -> Self {
-        Self::IndeterminateTimeZone(value)
-    }
-}
-
-impl From<FormattingError> for Error {
-    fn from(value: FormattingError) -> Self {
-        Self::TimeStampFormatting(value)
     }
 }
 

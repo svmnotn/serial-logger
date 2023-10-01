@@ -55,7 +55,7 @@ impl ReadLoop {
             .enumerate()
             .filter(|(_, byte)| **byte == b'\n')
         {
-            self.output.write_all(get_timestamp()?.as_bytes())?;
+            self.output.write_all(get_timestamp().as_bytes())?;
             self.output.write_all(b": ")?;
             self.output
                 .write_all(&total_bytes[last_new_line..(i + 1)])?;

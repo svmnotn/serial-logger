@@ -1,10 +1,11 @@
 use crate::{
     error::{Error, Result},
-    serial::available_ports,
+    serial::print_avaliable_ports,
 };
 use serialport::{DataBits, FlowControl, Parity, StopBits};
+use std::process::exit;
 
-const USAGE_STRING: &str = r"Usage: serial-logger [--print] [-h|--help] [-b|--baud=NUM] [--flow-control=n|s|h] [--data-bits=5|6|7|8] [--parity=n|o|e] [--stop-bits=1|2] [-t|--timeout=NUM] [-s|--buffer-size=NUM] [-w|--windows-line-ending] [-l|--log=LOG_FILE_NAME] [--port=SERIAL_PORT_NAME] SERIAL_PORT_NAME
+const USAGE_STRING: &str = r"Usage: serial-logger [--print] [-h|--help] [-b|--baud=NUM] [--flow-control=n|s|h] [--data-bits=5|6|7|8] [--parity=n|o|e] [--stop-bits=1|2] [-t|--timeout=NUM] [-s|--buffer-size=NUM] [-w|--windows-line-ending] [-l|--log=LOG_FILE_NAME] [--port=SERIAL_PORT_NAME] SERIAL_PORT_PATH
 
 --help: Prints this message
 --print: Prints out all available serial ports
@@ -19,13 +20,14 @@ const USAGE_STRING: &str = r"Usage: serial-logger [--print] [-h|--help] [-b|--ba
 --windows-line-ending: if this is present, when sending through the serial port it will interpret newlines as '\r\n' instead of just '\n' - Default off
 --log: The path to a log file - Optional
 
---port: Will be used instead of the positional argument if defined
-";
+--port: Will be used instead of the positional argument if defined, should just be the serial port's serial number.";
 
 /// Parsed Command Line Arguments
 pub struct Args {
+    /// The Serial Port's Path
+    pub path: Option<String>,
     /// The Serial Port's Serial Number, taken to be the Port's Name
-    pub port: String,
+    pub port: Option<String>,
     /// The baud rate to use for the serial port
     pub baud_rate: u32,
     /// How to handle flow control
@@ -46,10 +48,15 @@ pub struct Args {
     pub log_file: Option<String>,
 }
 
+pub fn print_help() {
+    println!("{USAGE_STRING}");
+}
+
 /// Parse the Command Line Arguments into [Args]
 pub fn parse_args() -> Result<Args> {
     use lexopt::prelude::*;
 
+    let mut path = None;
     let mut port = None;
     let mut baud_rate = 115_200;
     let mut flow_control = FlowControl::Software;
@@ -64,14 +71,12 @@ pub fn parse_args() -> Result<Args> {
     while let Some(arg) = parser.next()? {
         match arg {
             Long("print") => {
-                for (i, (name, _)) in available_ports()?.enumerate() {
-                    println!("{i}: {name}");
-                }
-                std::process::exit(0);
+                print_avaliable_ports()?;
+                exit(0);
             }
             Short('h') | Long("help") => {
-                print!("{}", USAGE_STRING);
-                std::process::exit(0);
+                print_help();
+                exit(0);
             }
             Short('b') | Long("baud") => {
                 baud_rate = parser.value()?.parse()?;
@@ -124,14 +129,15 @@ pub fn parse_args() -> Result<Args> {
                 port.replace(parser.value()?.string()?);
             }
             Value(val) if port.is_none() => {
-                port = Some(val.string()?);
+                path = Some(val.string()?);
             }
             _ => Err(arg.unexpected())?,
         }
     }
 
     Ok(Args {
-        port: port.ok_or(Error::MissingPortArgument)?,
+        path,
+        port,
         baud_rate,
         flow_control,
         data_bits,

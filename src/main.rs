@@ -1,38 +1,52 @@
 use serialport::SerialPort;
+use std::process::exit;
 
 mod args;
-use args::{parse_args, Args};
+use args::{parse_args, print_help};
 
 mod error;
 use error::{Error::PortNotFound, Result};
 
 mod loops;
-use loops::ReadLoop;
+use loops::{ReadLoop, WriteLoop};
 
 mod output;
 
 mod serial;
-use serial::{available_ports, open_port};
-
-use crate::loops::WriteLoop;
+use serial::{available_ports, open_port, print_avaliable_ports};
 
 mod time_stamp;
 
-fn open_user_specified_port(args: &Args) -> Result<impl SerialPort> {
+fn get_path_from_port(specified_port: &str) -> Result<String> {
     available_ports()?
-        .find(|(port, _)| port.eq_ignore_ascii_case(&args.port))
+        .find(|(port, _)| port.eq_ignore_ascii_case(specified_port))
         .ok_or(PortNotFound)
-        .and_then(|(_, path)| open_port(&path, args.baud_rate, args.timeout_in_seconds))
+        .map(|(_, path)| path)
 }
 
 fn main() -> Result<()> {
     let args = parse_args()?;
-    let mut port = open_user_specified_port(&args)?;
+    if args.port.is_none() && args.path.is_none() {
+        println!("Missing path argument or --port");
+        println!();
+        println!("Here is a list of available ports:");
+        println!();
+        print_avaliable_ports()?;
+        println!();
+        print_help();
+        exit(1);
+    }
 
-    println!(
-        "Receiving data on {} at {} baud",
-        &args.port, args.baud_rate
-    );
+    let path = if let Some(p) = &args.port {
+        get_path_from_port(p)?
+    } else if let Some(p) = &args.path {
+        p.clone()
+    } else {
+        unreachable!("Somehow we didn't have either a path or a port and we didn't exit before trying to use them...")
+    };
+    let mut port = open_port(&path, args.baud_rate, args.timeout_in_seconds)?;
+
+    println!("Receiving data on {} at {} baud", &path, args.baud_rate);
 
     let mut read_loop = ReadLoop::from_args(&args)?;
     let write_loop = WriteLoop::from_args(&args);
