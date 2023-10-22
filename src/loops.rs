@@ -12,14 +12,19 @@ use std::{
     thread::spawn,
 };
 
+pub trait RunableLoop {
+    fn from_args(args: &Args) -> Result<Self> where Self: Sized;
+    fn run(&mut self, port: &mut impl SerialPort) -> Result<()>;
+}
+
 pub struct ReadLoop {
     buffer: Vec<u8>,
     output: Output,
     read_bytes: usize,
 }
 
-impl ReadLoop {
-    pub fn from_args(args: &Args) -> Result<Self> {
+impl RunableLoop for ReadLoop {
+    fn from_args(args: &Args) -> Result<Self> {
         Ok(Self {
             buffer: vec![0; args.buffer_size],
             output: Output::from_args(args)?,
@@ -27,7 +32,7 @@ impl ReadLoop {
         })
     }
 
-    pub fn run(&mut self, port: &mut impl SerialPort) -> Result<()> {
+    fn run(&mut self, port: &mut impl SerialPort) -> Result<()> {
         use std::io::Write;
 
         self.read_bytes = match port.read(&mut self.buffer[self.read_bytes..]) {
@@ -71,14 +76,57 @@ impl ReadLoop {
     }
 }
 
+pub struct BinaryReadLoop {
+    buffer: Vec<u8>,
+    output: Output,
+}
+
+impl RunableLoop for BinaryReadLoop {
+    fn from_args(args: &Args) -> Result<Self> {
+        Ok(Self {
+            buffer: vec![0; args.buffer_size],
+            output: Output::from_args(args)?,
+        })
+    }
+
+    fn run(&mut self, port: &mut impl SerialPort) -> Result<()> {
+        use std::io::Write;
+
+        let read_bytes = match port.read(&mut self.buffer) {
+            Err(e)
+                if matches!(
+                    e.kind(),
+                    std::io::ErrorKind::Interrupted | std::io::ErrorKind::TimedOut
+                ) =>
+            {
+                Ok(0)
+            }
+            v => v,
+        }?;
+
+        if read_bytes > 0 {
+            let total_bytes = &self.buffer[..read_bytes];
+
+            self.output.write_all(get_timestamp().as_bytes())?;
+            self.output.write_all(b": ")?;
+            for c in total_bytes {
+                self.output.write_all(format!("{c:X}").as_bytes())?;
+            }
+            self.output.write_all(b"\n")?;
+        }
+
+        Ok(())
+    }
+}
+
 pub struct WriteLoop {
     kill_thread: Sender<()>,
     rx_input: Receiver<CString>,
     windows_ending: bool,
 }
 
-impl WriteLoop {
-    pub fn from_args(args: &Args) -> Self {
+impl RunableLoop for WriteLoop {
+    fn from_args(args: &Args) -> Result<Self> {
         let (tx_user_input, rx_input) = std::sync::mpsc::channel();
         let (kill_thread, kill_command) = std::sync::mpsc::channel();
 
@@ -97,14 +145,14 @@ impl WriteLoop {
             }
         });
 
-        WriteLoop {
+        Ok(WriteLoop {
             kill_thread,
             rx_input,
             windows_ending: args.windows_line_ending,
-        }
+        })
     }
 
-    pub fn run(&self, port: &mut impl SerialPort) -> Result<()> {
+    fn run(&mut self, port: &mut impl SerialPort) -> Result<()> {
         let input = self.rx_input.try_recv();
 
         if let Err(TryRecvError::Disconnected) = input {

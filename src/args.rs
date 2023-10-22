@@ -1,26 +1,9 @@
 use crate::{
     error::{Error, Result},
-    serial::print_avaliable_ports,
+    serial::print_available_ports,
 };
 use serialport::{DataBits, FlowControl, Parity, StopBits};
 use std::process::exit;
-
-const USAGE_STRING: &str = r"Usage: serial-logger [--print] [-h|--help] [-b|--baud=NUM] [--flow-control=n|s|h] [--data-bits=5|6|7|8] [--parity=n|o|e] [--stop-bits=1|2] [-t|--timeout=NUM] [-s|--buffer-size=NUM] [-w|--windows-line-ending] [-l|--log=LOG_FILE_NAME] [--port=SERIAL_PORT_NAME] SERIAL_PORT_PATH
-
---help: Prints this message
---print: Prints out all available serial ports
-
---baud: The baud rate to use for the serial port - Default: 115_200
---flow-control: How to handle flow control, n: None, s: Software, h: Hardware - Accepted Values: [n,s,h] Default: Software
---data-bits: How many data bits - Accepted Values: [5,6,7,8] Default: 8
---parity: Parity checking modes, n: None, o: Odd, e: Even - Accepted Values: [n,o,e] Default: None
---stop-bits: Number of Stop Bits - Accepted Values: [1,2] Default: 1
---timeout: Set the amount of time to wait to receive data before timing out - Unit: Seconds, Default: 1
---buffer-size: How large to make the `line` buffer, this should roughly match to the maximum amount output by a single printf, not the size of a single line - Default: 100000
---windows-line-ending: if this is present, when sending through the serial port it will interpret newlines as '\r\n' instead of just '\n' - Default off
---log: The path to a log file - Optional
-
---port: Will be used instead of the positional argument if defined, should just be the serial port's serial number.";
 
 /// Parsed Command Line Arguments
 pub struct Args {
@@ -46,10 +29,33 @@ pub struct Args {
     pub windows_line_ending: bool,
     /// The path to an optional Log File
     pub log_file: Option<String>,
+    /// Should the incoming data be treated as raw bytes or ASCII?
+    pub raw_bytes: bool,
 }
 
 pub fn print_help() {
-    println!("{USAGE_STRING}");
+    let name = env!("CARGO_PKG_NAME");
+    let version = env!("CARGO_PKG_VERSION");
+
+    println!(r"{name} {version}
+Usage: {name} [--print] [-h|--help] [-b|--baud=NUM] [--flow-control=n|s|h] [--data-bits=5|6|7|8] [--parity=n|o|e] [--stop-bits=1|2] [-t|--timeout=NUM] [-s|--buffer-size=NUM] [-w|--windows-line-ending] [-l|--log=LOG_FILE_NAME] [-r|--raw] [-p|--port=SERIAL_PORT_NAME] SERIAL_PORT_PATH
+
+--print: Prints out all available serial ports
+--help: Prints this message
+
+--baud: The baud rate to use for the serial port - Default: 115_200
+--flow-control: How to handle flow control, n: None, s: Software, h: Hardware - Accepted Values: [n,s,h] Default: Software
+--data-bits: How many data bits - Accepted Values: [5,6,7,8] Default: 8
+--parity: Parity checking modes, n: None, o: Odd, e: Even - Accepted Values: [n,o,e] Default: None
+--stop-bits: Number of Stop Bits - Accepted Values: [1,2] Default: 1
+--timeout: Set the amount of time to wait to receive data before timing out - Unit: Seconds, Default: 1
+--buffer-size: How large to make the `line` buffer, this should roughly match to the maximum amount output by a single printf, not the size of a single line - Default: 100000
+--windows-line-ending: if this is present, when sending through the serial port it will interpret newlines as '\r\n' instead of just '\n' - Default off
+--log: The path to a log file - Optional
+
+--raw: treat the incoming bytes as just raw bytes instead of treating them as ASCII/UTF8
+
+--port: Will be used instead of the positional argument if defined, should just be the serial port's serial number.");
 }
 
 /// Parse the Command Line Arguments into [Args]
@@ -67,11 +73,13 @@ pub fn parse_args() -> Result<Args> {
     let mut buffer_size = 100000;
     let mut windows_line_ending = false;
     let mut log_file = None;
+    let mut raw_bytes = false;
+
     let mut parser = lexopt::Parser::from_env();
     while let Some(arg) = parser.next()? {
         match arg {
             Long("print") => {
-                print_avaliable_ports()?;
+                print_available_ports()?;
                 exit(0);
             }
             Short('h') | Long("help") => {
@@ -80,6 +88,9 @@ pub fn parse_args() -> Result<Args> {
             }
             Short('b') | Long("baud") => {
                 baud_rate = parser.value()?.parse()?;
+            }
+            Short('r') | Long("raw") => {
+                raw_bytes = true;
             }
             Long("flow-control") => {
                 flow_control = match &*parser.value()?.to_string_lossy() {
@@ -125,7 +136,7 @@ pub fn parse_args() -> Result<Args> {
             Short('l') | Long("log") => {
                 log_file.replace(parser.value()?.string()?);
             }
-            Long("port") => {
+            Short('p') | Long("port") => {
                 port.replace(parser.value()?.string()?);
             }
             Value(val) if port.is_none() => {
@@ -147,5 +158,6 @@ pub fn parse_args() -> Result<Args> {
         buffer_size,
         windows_line_ending,
         log_file,
+        raw_bytes,
     })
 }

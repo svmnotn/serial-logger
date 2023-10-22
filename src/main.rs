@@ -8,12 +8,12 @@ mod error;
 use error::{Error::PortNotFound, Result};
 
 mod loops;
-use loops::{ReadLoop, WriteLoop};
+use loops::{RunableLoop, BinaryReadLoop, ReadLoop, WriteLoop};
 
 mod output;
 
 mod serial;
-use serial::{available_ports, open_port, print_avaliable_ports};
+use serial::{available_ports, open_port, print_available_ports};
 
 mod time_stamp;
 
@@ -31,7 +31,7 @@ fn main() -> Result<()> {
         println!();
         println!("Here is a list of available ports:");
         println!();
-        print_avaliable_ports()?;
+        print_available_ports()?;
         println!();
         print_help();
         exit(1);
@@ -48,14 +48,24 @@ fn main() -> Result<()> {
 
     println!("Receiving data on {} at {} baud", &path, args.baud_rate);
 
-    let mut read_loop = ReadLoop::from_args(&args)?;
-    let write_loop = WriteLoop::from_args(&args);
-
     port.write_data_terminal_ready(true)?;
     port.write_request_to_send(true)?;
 
-    loop {
-        write_loop.run(&mut port)?;
-        read_loop.run(&mut port)?;
+    let mut write_loop = WriteLoop::from_args(&args)?;
+    if args.raw_bytes {
+        let mut binary_read_loop = BinaryReadLoop::from_args(&args)?;
+
+        loop {
+            write_loop.run(&mut port)?;
+            binary_read_loop.run(&mut port)?;
+        }
+    } else {
+        let mut read_loop = ReadLoop::from_args(&args)?;
+
+        loop {
+            write_loop.run(&mut port)?;
+            read_loop.run(&mut port)?;
+        }
     }
+
 }

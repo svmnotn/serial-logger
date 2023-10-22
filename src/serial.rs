@@ -26,7 +26,7 @@ pub fn available_ports() -> Result<impl Iterator<Item = (PortName, PortAddress)>
 }
 
 /// Prints all the available ports with the format: `SERIAL @ PATH`
-pub fn print_avaliable_ports() -> Result<()> {
+pub fn print_available_ports() -> Result<()> {
     for (name, path) in available_ports()? {
         println!("{name} @ {path}");
     }
