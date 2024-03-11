@@ -11,7 +11,7 @@ description = "Logs a serial port to stdout or a file. Allows for writing to the
 
 [dependencies]
 serialport = "4.2.2"
-chrono = { version = "0.4.34", default-features = false, features = ["clock"] }
+chrono = { version = "0.4.35", default-features = false, features = ["clock"] }
 lexopt = "0.3.0"
 
 # The profile that 'cargo dist' will build with
