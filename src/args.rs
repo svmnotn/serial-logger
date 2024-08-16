@@ -5,7 +5,7 @@ use crate::{
 use serialport::{DataBits, FlowControl, Parity, StopBits};
 use std::process::exit;
 
-const USAGE_STRING: &str = r"Usage: serial-logger [--print] [-h|--help] [-b|--baud=NUM] [--flow-control=n|s|h] [--data-bits=5|6|7|8] [--parity=n|o|e] [--stop-bits=1|2] [-t|--timeout=NUM] [-s|--buffer-size=NUM] [-w|--windows-line-ending] [-l|--log=LOG_FILE_NAME] [--port=SERIAL_PORT_NAME] SERIAL_PORT_PATH
+const USAGE_STRING: &str = r"Usage: serial-logger [--print] [-h|--help] [-b|--baud=NUM] [--flow-control=n|s|h] [--data-bits=5|6|7|8] [--parity=n|o|e] [--stop-bits=1|2] [-t|--timeout=NUM] [--buffer-size=NUM] [-w|--windows-line-ending] [-l|--log=LOG_FILE_NAME] [-s|--silent] [--port=SERIAL_PORT_NAME] SERIAL_PORT_PATH
 
 --help: Prints this message
 --print: Prints out all available serial ports
@@ -19,6 +19,7 @@ const USAGE_STRING: &str = r"Usage: serial-logger [--print] [-h|--help] [-b|--ba
 --buffer-size: How large to make the `line` buffer, this should roughly match to the maximum amount output by a single printf, not the size of a single line - Default: 100000
 --windows-line-ending: if this is present, when sending through the serial port it will interpret newlines as '\r\n' instead of just '\n' - Default off
 --log: The path to a log file - Optional
+--silent: Don't write output to stdout - Optional
 
 --port: Will be used instead of the positional argument if defined, should just be the serial port's serial number.";
 
@@ -44,6 +45,8 @@ pub struct Args {
     pub buffer_size: usize,
     /// When sending through the serial port it will interpret newlines as '\r\n' instead of just '\n'
     pub windows_line_ending: bool,
+    /// Don't output to stdout
+    pub silent: bool,
     /// The path to an optional Log File
     pub log_file: Option<String>,
 }
@@ -65,6 +68,7 @@ pub fn parse_args() -> Result<Args> {
     let mut stop_bits = StopBits::One;
     let mut timeout_in_seconds = 1;
     let mut buffer_size = 100000;
+    let mut silent = false;
     let mut windows_line_ending = false;
     let mut log_file = None;
     let mut parser = lexopt::Parser::from_env();
@@ -116,11 +120,14 @@ pub fn parse_args() -> Result<Args> {
             Short('t') | Long("timeout") => {
                 timeout_in_seconds = parser.value()?.parse()?;
             }
-            Short('s') | Long("buffer-size") => {
+            Long("buffer-size") => {
                 buffer_size = parser.value()?.parse()?;
             }
             Short('w') | Long("windows-line-ending") => {
                 windows_line_ending = true;
+            }
+            Short('s') | Long("silent") => {
+                silent = true;
             }
             Short('l') | Long("log") => {
                 log_file.replace(parser.value()?.string()?);
@@ -146,6 +153,7 @@ pub fn parse_args() -> Result<Args> {
         timeout_in_seconds,
         buffer_size,
         windows_line_ending,
+        silent,
         log_file,
     })
 }

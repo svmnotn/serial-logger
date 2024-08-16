@@ -1,6 +1,6 @@
 [package]
 name = "serial-logger"
-version = "1.1.1"
+version = "1.2.0"
 edition = "2021"
 authors = ["Victor M. Suarez <svmnotn@gmail.com>"]
 rust-version = "1.71"
@@ -10,14 +10,14 @@ readme = "README.md"
 description = "Logs a serial port to stdout or a file. Allows for writing to the serial port from stdin"
 
 [dependencies]
-serialport = "4.4.0"
+serialport = "4.5.0"
 chrono = { version = "0.4.38", default-features = false, features = ["clock"] }
 lexopt = "0.3.0"
 
 # The profile that 'cargo dist' will build with
 [profile.dist]
 inherits = "release"
-lto = "thin"
+lto = "fat"
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]
