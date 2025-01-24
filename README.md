@@ -2,8 +2,8 @@
 
 Serial Logger is a utility for logging serial ports
 
-```
-Usage: serial-logger [--print] [-h|--help] [-b|--baud=NUM] [--flow-control=n|s|h] [--data-bits=5|6|7|8] [--parity=n|o|e] [--stop-bits=1|2] [-t|--timeout=NUM] [-s|--buffer-size=NUM] [-w|--windows-line-ending] [-l|--log=LOG_FILE_NAME] [--port=SERIAL_PORT_NAME] SERIAL_PORT_NAME
+```console
+Usage: serial-logger [--print] [-h|--help] [-b|--baud=NUM] [--flow-control=n|s|h] [--data-bits=5|6|7|8] [--parity=n|o|e] [--stop-bits=1|2] [-t|--timeout=NUM] [--buffer-size=NUM] [-w|--windows-line-ending] [-l|--log=LOG_FILE_NAME] [-s|--silent] [--port=SERIAL_PORT_NAME] SERIAL_PORT_PATH
 
 --help: Prints this message
 --print: Prints out all available serial ports
@@ -17,6 +17,7 @@ Usage: serial-logger [--print] [-h|--help] [-b|--baud=NUM] [--flow-control=n|s|h
 --buffer-size: How large to make the `line` buffer, this should roughly match to the maximum amount output by a single printf, not the size of a single line - Default: 100000
 --windows-line-ending: if this is present, when sending through the serial port it will interpret newlines as '\r\n' instead of just '\n' - Default off
 --log: The path to a log file - Optional
+--silent: Don't write output to stdout - Optional
 
---port: Will be used instead of the positional argument if defined
+--port: Will be used instead of the positional argument if defined, should just be the serial port's serial number.
 ```
