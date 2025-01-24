@@ -1,6 +1,6 @@
 use crate::{
     error::{Error, Result},
-    serial::print_avaliable_ports,
+    serial::print_available_ports,
 };
 use serialport::{DataBits, FlowControl, Parity, StopBits};
 use std::process::exit;
@@ -75,7 +75,7 @@ pub fn parse_args() -> Result<Args> {
     while let Some(arg) = parser.next()? {
         match arg {
             Long("print") => {
-                print_avaliable_ports()?;
+                print_available_ports()?;
                 exit(0);
             }
             Short('h') | Long("help") => {

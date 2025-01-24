@@ -13,7 +13,7 @@ use loops::{ReadLoop, WriteLoop};
 mod output;
 
 mod serial;
-use serial::{available_ports, open_port, print_avaliable_ports};
+use serial::{available_ports, open_port, print_available_ports};
 
 mod time_stamp;
 
@@ -31,7 +31,7 @@ fn main() -> Result<()> {
         println!();
         println!("Here is a list of available ports:");
         println!();
-        print_avaliable_ports()?;
+        print_available_ports()?;
         println!();
         print_help();
         exit(1);
