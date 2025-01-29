@@ -1,6 +1,6 @@
+use super::args::Args;
 use crate::error::Result;
 use serialport::SerialPort;
-use super::args::Args;
 
 pub type PortName = String;
 pub type PortAddress = String;

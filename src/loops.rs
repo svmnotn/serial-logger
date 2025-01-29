@@ -65,7 +65,9 @@ impl ReadLoop {
             self.output.write_all(b": ")?;
             let line = &total_bytes[last_new_line..(i + 1)];
             match self.mode {
-                StringParsingMode::Utf8 => self.output.write_all(String::from_utf8_lossy(line).as_bytes())?,
+                StringParsingMode::Utf8 => self
+                    .output
+                    .write_all(String::from_utf8_lossy(line).as_bytes())?,
                 // Pending stabilization of the below functions
                 // StringParsingMode::Utf16BE => self.output.write_all(String::from_utf16be_lossy(line).as_bytes())?,
                 // StringParsingMode::Utf16LE => self.output.write_all(String::from_utf16le_lossy(line).as_bytes())?,
