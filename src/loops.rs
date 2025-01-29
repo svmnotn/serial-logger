@@ -47,6 +47,10 @@ impl ReadLoop {
             if *v == b'\r' {
                 *v = b' ';
             }
+
+            if *v == b'\0' {
+                *v = b'?';
+            }
         }
 
         let mut last_new_line = 0;
