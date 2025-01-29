@@ -1,5 +1,5 @@
 use crate::{
-    args::Args,
+    args::{Args, StringParsingMode},
     error::{Error::StdInThreadDisconnected, Result},
     output::Output,
     time_stamp::get_timestamp,
@@ -15,6 +15,7 @@ use std::{
 pub struct ReadLoop {
     buffer: Vec<u8>,
     output: Output,
+    mode: StringParsingMode,
     read_bytes: usize,
 }
 
@@ -23,6 +24,7 @@ impl ReadLoop {
         Ok(Self {
             buffer: vec![0; args.buffer_size],
             output: Output::from_args(args)?,
+            mode: args.string_parsing_mode,
             read_bytes: 0,
         })
     }
@@ -61,8 +63,13 @@ impl ReadLoop {
         {
             self.output.write_all(get_timestamp().as_bytes())?;
             self.output.write_all(b": ")?;
-            self.output
-                .write_all(&total_bytes[last_new_line..(i + 1)])?;
+            let line = &total_bytes[last_new_line..(i + 1)];
+            match self.mode {
+                StringParsingMode::Utf8 => self.output.write_all(String::from_utf8_lossy(line).as_bytes())?,
+                // Pending stabilization of the below functions
+                // StringParsingMode::Utf16BE => self.output.write_all(String::from_utf16be_lossy(line).as_bytes())?,
+                // StringParsingMode::Utf16LE => self.output.write_all(String::from_utf16le_lossy(line).as_bytes())?,
+            }
             last_new_line = i + 1;
         }
 

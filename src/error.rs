@@ -6,6 +6,7 @@ pub type Result<T> = StdResult<T, Error>;
 
 /// All the possible Errors in this application
 #[derive(Debug)]
+#[allow(dead_code)]
 pub enum Error {
     Io(IoError),
     Serial(SerialError),
@@ -23,6 +24,8 @@ pub enum Error {
     InvalidParityArgument,
     /// --stop-bits was not one of [1, 2]
     InvalidStopBitsArgument,
+    /// --string-parsing was not one of [utf8, utf16be, utf16le]
+    InvalidStringParsingArgument,
 }
 
 impl From<IoError> for Error {
