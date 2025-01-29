@@ -1,5 +1,6 @@
 use crate::error::Result;
 use serialport::SerialPort;
+use super::args::Args;
 
 pub type PortName = String;
 pub type PortAddress = String;
@@ -35,16 +36,15 @@ pub fn print_available_ports() -> Result<()> {
 }
 
 /// Attempt to open the port at the specified path, with the given baud_rate and timeout
-pub fn open_port(path: &str, baud_rate: u32, timeout_in_seconds: u64) -> Result<impl SerialPort> {
-    use serialport::{DataBits, FlowControl, Parity, StopBits};
+pub fn open_port(path: &str, args: &Args) -> Result<impl SerialPort> {
     use std::time::Duration;
 
-    serialport::new(path, baud_rate)
-        .flow_control(FlowControl::Software)
-        .data_bits(DataBits::Eight)
-        .parity(Parity::None)
-        .stop_bits(StopBits::One)
-        .timeout(Duration::from_secs(timeout_in_seconds))
+    serialport::new(path, args.baud_rate)
+        .flow_control(args.flow_control)
+        .data_bits(args.data_bits)
+        .parity(args.parity)
+        .stop_bits(args.stop_bits)
+        .timeout(Duration::from_secs(args.timeout_in_seconds))
         .open_native()
         .map_err(Into::into)
 }

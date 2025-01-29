@@ -27,10 +27,8 @@ fn get_path_from_port(specified_port: &str) -> Result<String> {
 fn main() -> Result<()> {
     let args = parse_args()?;
     if args.port.is_none() && args.path.is_none() {
-        println!("Missing path argument or --port");
-        println!();
-        println!("Here is a list of available ports:");
-        println!();
+        println!("Missing path argument or --port\n");
+        println!("Here is a list of available ports:\n");
         print_available_ports()?;
         println!();
         print_help();
@@ -44,7 +42,7 @@ fn main() -> Result<()> {
     } else {
         unreachable!("Somehow we didn't have either a path or a port and we didn't exit before trying to use them...")
     };
-    let mut port = open_port(&path, args.baud_rate, args.timeout_in_seconds)?;
+    let mut port = open_port(&path, &args)?;
 
     println!("Receiving data on {} at {} baud", &path, args.baud_rate);
 
