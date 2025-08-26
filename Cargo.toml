@@ -10,7 +10,7 @@ readme = "README.md"
 description = "Logs a serial port to stdout or a file. Allows for writing to the serial port from stdin"
 
 [dependencies]
-serialport = "4.7.2"
+serialport = "4.7.3"
 chrono = { version = "0.4.41", default-features = false, features = ["clock"] }
 lexopt = "0.3.1"
 
