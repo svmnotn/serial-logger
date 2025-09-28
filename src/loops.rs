@@ -127,9 +127,9 @@ impl WriteLoop {
         if let Ok(input) = input {
             port.write_all(input.as_bytes())?;
             if self.windows_ending {
-                port.write_all(&[b'\r'])?;
+                port.write_all(b"\r")?;
             }
-            port.write_all(&[b'\n'])?;
+            port.write_all(b"\r")?;
         }
 
         Ok(())
