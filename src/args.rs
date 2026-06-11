@@ -5,7 +5,7 @@ use crate::{
 use serialport::{DataBits, FlowControl, Parity, StopBits};
 use std::process::exit;
 
-const USAGE_STRING: &str = r"Usage: serial-logger [--print] [-h|--help] [-b|--baud=NUM] [--flow-control=n|s|h] [--data-bits=5|6|7|8] [--parity=n|o|e] [--stop-bits=1|2] [-t|--timeout=NUM] [--buffer-size=NUM] [-w|--windows-line-ending] [--string-parsing=utf8] [-l|--log=LOG_FILE_NAME] [-s|--silent] [--port=SERIAL_PORT_NAME] SERIAL_PORT_PATH
+const USAGE_STRING: &str = r"Usage: serial-logger [--print] [-h|--help] [-b|--baud=NUM] [--flow-control=n|s|h] [--data-bits=5|6|7|8] [--parity=n|o|e] [--stop-bits=1|2] [-t|--timeout=NUM] [--buffer-size=NUM] [-w|--windows-line-ending] [--string-parsing=utf8] [-l|--log[=LOG_FILE_NAME]] [-s|--silent] [--port=SERIAL_PORT_NAME] SERIAL_PORT_PATH
 
 --help: Prints this message
 --print: Prints out all available serial ports
@@ -18,7 +18,7 @@ const USAGE_STRING: &str = r"Usage: serial-logger [--print] [-h|--help] [-b|--ba
 --timeout: Set the amount of time to wait to receive data before timing out - Unit: Seconds, Default: 1
 --buffer-size: How large to make the `line` buffer, this should roughly match to the maximum amount output by a single printf, not the size of a single line - Default: 100000
 --windows-line-ending: if this is present, when sending through the serial port it will interpret newlines as '\r\n' instead of just '\n' - Default off
---log: The path to a log file - Optional
+--log: Enable logging. Optional value: LOG_FILE_NAME. If omitted, defaults to <RFC3339 timestamp>-<port_name>.log
 --silent: Don't write output to stdout - Optional
 --string-parsing: Assume the incoming data is utf8[/utf16le/utf16be, pending rust update] - Default: utf8
 
@@ -57,6 +57,8 @@ pub struct Args {
     pub windows_line_ending: bool,
     /// Don't output to stdout
     pub silent: bool,
+    /// Logging is enabled when this is present
+    pub log_enabled: bool,
     /// The path to an optional Log File
     pub log_file: Option<String>,
     // Assume UTF-8/UTF-16LE/UTF-16BE
@@ -83,6 +85,7 @@ pub fn parse_args() -> Result<Args> {
     let mut silent = false;
     let mut windows_line_ending = false;
     let mut string_parsing_mode = StringParsingMode::Utf8;
+    let mut log_enabled = false;
     let mut log_file = None;
     let mut parser = lexopt::Parser::from_env();
     while let Some(arg) = parser.next()? {
@@ -151,7 +154,10 @@ pub fn parse_args() -> Result<Args> {
                 silent = true;
             }
             Short('l') | Long("log") => {
-                log_file.replace(parser.value()?.string()?);
+                log_enabled = true;
+                if let Some(value) = parser.optional_value() {
+                    log_file = Some(value.string()?);
+                }
             }
             Long("port") => {
                 port.replace(parser.value()?.string()?);
@@ -176,6 +182,7 @@ pub fn parse_args() -> Result<Args> {
         windows_line_ending,
         string_parsing_mode,
         silent,
+        log_enabled,
         log_file,
     })
 }

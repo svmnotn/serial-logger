@@ -1,11 +1,50 @@
-use crate::{args::Args, error::Result};
+use crate::{
+    args::Args,
+    error::Result,
+    serial::{available_ports, PortName},
+};
 use std::{
     fs::File,
     io::{stdout, Write},
+    path::Path,
 };
 
+fn canonical_port_name(args: &Args) -> Result<Option<PortName>> {
+    if let Some(requested_name) = args.port.as_deref() {
+        return Ok(available_ports()?
+            .find(|(name, _)| name.eq_ignore_ascii_case(requested_name))
+            .map(|(name, _)| name)
+            .or_else(|| Some(requested_name.to_owned())));
+    }
+
+    if let Some(path) = args.path.as_deref() {
+        return Ok(available_ports()?
+            .find(|(_, port_path)| port_path == path)
+            .map(|(name, _)| name));
+    }
+
+    Ok(None)
+}
+
+fn default_log_file_name(args: &Args) -> Result<String> {
+    use chrono::{Local, SecondsFormat};
+
+    let timestamp = Local::now().to_rfc3339_opts(SecondsFormat::Secs, false);
+    let port_name = canonical_port_name(args)?
+        .as_deref()
+        .or_else(|| {
+            args.path
+                .as_deref()
+                .and_then(|path| Path::new(path).file_name()?.to_str())
+        })
+        .unwrap_or("unknown-port")
+        .replace('/', "_");
+
+    Ok(format!("{timestamp}-{port_name}.log"))
+}
+
 /// A wrapper around stdout OR a File, allowing us to write to either
-/// based on if the `log_file` field of [Args] is filled
+/// based on if logging is enabled and if [Args] has a `log_file` specified
 pub enum Output {
     /// Locks Standard Out so that we have exclusive writing to it, saving time
     Std(std::io::StdoutLock<'static>),
@@ -21,16 +60,32 @@ pub enum Output {
 }
 
 impl Output {
-    /// Create the desired output by checking if [Args] has a `log_file` specified
+    /// Create the desired output by checking if logging is enabled
     pub fn from_args(args: &Args) -> Result<Self> {
-        Ok(match (args.log_file.as_ref(), args.silent) {
-            (None, true) => Self::None,
-            (None, false) => Self::Std(stdout().lock()),
-            (Some(f), true) => Self::Fs(File::create(f)?),
-            (Some(f), false) => Self::Both {
-                file: File::create(f)?,
-                stdout: stdout().lock(),
-            },
+        Ok(match (args.log_enabled, args.silent) {
+            (false, true) => Self::None,
+            (false, false) => Self::Std(stdout().lock()),
+            (true, true) => {
+                let log_file = args
+                    .log_file
+                    .as_deref()
+                    .map(ToOwned::to_owned)
+                    .map(Ok)
+                    .unwrap_or_else(|| default_log_file_name(args))?;
+                Self::Fs(File::create(&log_file)?)
+            }
+            (true, false) => {
+                let log_file = args
+                    .log_file
+                    .as_deref()
+                    .map(ToOwned::to_owned)
+                    .map(Ok)
+                    .unwrap_or_else(|| default_log_file_name(args))?;
+                Self::Both {
+                    file: File::create(&log_file)?,
+                    stdout: stdout().lock(),
+                }
+            }
         })
     }
 }
