@@ -44,7 +44,7 @@ fn main() -> Result<()> {
     };
     let mut port = open_port(&path, &args)?;
 
-    println!("Receiving data on {} at {} baud", &path, args.baud_rate);
+    println!("Receiving data on {} at {} baud", path, args.baud_rate);
 
     let mut read_loop = ReadLoop::from_args(&args)?;
     let write_loop = WriteLoop::from_args(&args);
